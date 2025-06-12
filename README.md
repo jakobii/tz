@@ -5,17 +5,16 @@ Timezone Conversion Utility
 go install github.com/jakobii/tz@latest
 ```
 
-
 ## Examples
 
-Convert unix timestamp to local time.
+Convert rfc3339 timestamp to local timezone.
 
 ```sh
-echo 1257894000000 | tz
+tz '2009-11-10T23:00:00Z    
 ```
 
-Convert UTC (or any other rfc3339 timestamp) to local time.
+See more examples and usage.
 
 ```sh
-echo '2009-11-10T23:00:00Z' | tz 
+tz -h
 ```

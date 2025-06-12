@@ -63,8 +63,6 @@ func Parse(f Format, v string) (time.Time, error) {
 			return time.Time{}, err
 		}
 		return time.Unix(vInt, 0), nil
-	case JavaScriptDate:
-		return time.Parse(JavaScriptDateFormat, v)
 	default:
 		return time.Time{}, errUnknownFormat
 	}

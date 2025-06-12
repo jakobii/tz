@@ -33,13 +33,6 @@ const (
 	Unix
 	UnixMilli
 	UnixMicro
-	JavaScriptDate // Date().toString() equivalent
-)
-
-// js formats
-const (
-	JS                = JavaScriptDate
-	JavaScriptDateNow = UnixMilli // Date.now() equivalent
 )
 
 func (f Format) String() string {
@@ -134,14 +127,12 @@ func ParseFormat(formatStr string) (Format, error) {
 		return DateOnly, nil
 	case "timeonly":
 		return TimeOnly, nil
-	case "unix", "unixsecond":
+	case "unix", "unixsecond", "second", "s":
 		return Unix, nil
-	case "unixmilli", "unixmillisecond", "jsmilli":
+	case "unixmilli", "unixmillisecond", "millisecond", "ms":
 		return UnixMilli, nil
-	case "unixmicro", "unixmicrosecond":
+	case "unixmicro", "unixmicrosecond", "microsecond", "us":
 		return UnixMicro, nil
-	case "js", "javascript":
-		return JavaScriptDate, nil
 	default:
 		return -1, fmt.Errorf("invalid format: %s", formatStr)
 	}
@@ -223,13 +214,7 @@ func FormatTime(f Format, t time.Time) string {
 		return strconv.FormatInt(t.UnixMicro(), 10)
 	case Unix:
 		return strconv.FormatInt(t.Unix(), 10)
-	case JavaScriptDate:
-		return t.Format(JavaScriptDateFormat)
 	default:
 		return ""
 	}
 }
-
-const (
-	JavaScriptDateFormat = "Mon Jan 2 2006 15:04:05 MST (MST)"
-)
