@@ -4,96 +4,141 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 )
 
 type TimeParser struct {
-	layouts map[string]string
+	layouts []LayoutName
 }
 
-func NewTimeParser(layouts map[string]string) *TimeParser {
+func NewTimeParser(layouts ...LayoutName) *TimeParser {
 	return &TimeParser{layouts: layouts}
 }
 
+func NewTimeParserAll() *TimeParser {
+	return NewTimeParser(
+		Layout,
+		ANSIC,
+		UnixDate,
+		RubyDate,
+		RFC822,
+		RFC822Z,
+		RFC850,
+		RFC1123,
+		RFC1123Z,
+		RFC3339,
+		RFC3339Nano,
+		Kitchen,
+		Stamp,
+		StampMilli,
+		StampMicro,
+		StampNano,
+		DateTime,
+		DateOnly,
+		TimeOnly,
+		UnixMilli,
+	)
+}
+
 func (p *TimeParser) ParseTime(v string) (*TimeResult, error) {
-	tryiedAs := make([]string, 0, len(p.layouts))
+	tryiedAs := make([]LayoutName, 0, len(p.layouts))
 	// Try parsing with each layout
-	for name, layout := range p.layouts {
-		tryiedAs = append(tryiedAs, name)
-		if t, err := time.Parse(layout, v); err == nil {
+	for _, layout := range p.layouts {
+		tryiedAs = append(tryiedAs, layout)
+		if t, err := parseLayout(layout, v); err == nil {
 			return &TimeResult{
 				TriedAs:  tryiedAs,
-				ParsedAs: name,
+				ParsedAs: layout,
 				Time:     t,
 			}, nil
 		}
 	}
-	// Try parsing as Unix timestamp
-	if trimmed := strings.TrimSpace(v); trimmed != "" && trimmed != "0" {
-		tryiedAs = append(tryiedAs, UnixMilli)
-		if n, err := strconv.ParseInt(trimmed, 10, 64); err == nil {
-			return &TimeResult{
-				TriedAs:  tryiedAs,
-				ParsedAs: UnixMilli,
-				Time:     time.UnixMilli(n),
-			}, nil
-		}
-	}
-	return &TimeResult{
-		TriedAs: tryiedAs, // TODO: Maybe error in result? This is not great.
-	}, fmt.Errorf("%w: '%s'", errInvalidTimeFormat, v)
+	return nil, fmt.Errorf("%w: '%s'", errInvalidTimeFormat, v)
 }
 
 type TimeResult struct {
-	TriedAs  []string
-	ParsedAs string
+	TriedAs  []LayoutName
+	ParsedAs LayoutName
 	Time     time.Time
 }
 
-var errInvalidTimeFormat = errors.New("invalid time format")
+var (
+	errUnknownLayout     = errors.New("unknown layout")
+	errInvalidTimeFormat = errors.New("invalid time format")
+)
 
-var DefaultLayouts = map[string]string{
-	Layout:      time.Layout,
-	ANSIC:       time.ANSIC,
-	UnixDate:    time.UnixDate,
-	RubyDate:    time.RubyDate,
-	RFC822:      time.RFC822,
-	RFC822Z:     time.RFC822Z,
-	RFC850:      time.RFC850,
-	RFC1123:     time.RFC1123,
-	RFC1123Z:    time.RFC1123Z,
-	RFC3339:     time.RFC3339,
-	RFC3339Nano: time.RFC3339Nano,
-	Kitchen:     time.Kitchen,
-	Stamp:       time.Stamp,
-	StampMilli:  time.StampMilli,
-	StampMicro:  time.StampMicro,
-	StampNano:   time.StampNano,
-	DateTime:    time.DateTime,
-	DateOnly:    time.DateOnly,
-	TimeOnly:    time.TimeOnly,
-}
+type LayoutName string
 
 const (
-	Layout      = "Layout"
-	ANSIC       = "ANSIC"
-	UnixDate    = "UnixDate"
-	RubyDate    = "RubyDate"
-	RFC822      = "RFC822"
-	RFC822Z     = "RFC822Z"
-	RFC850      = "RFC850"
-	RFC1123     = "RFC1123"
-	RFC1123Z    = "RFC1123Z"
-	RFC3339     = "RFC3339"
-	RFC3339Nano = "RFC3339Nano"
-	Kitchen     = "Kitchen"
-	Stamp       = "Stamp"
-	StampMilli  = "StampMilli"
-	StampMicro  = "StampMicro"
-	StampNano   = "StampNano"
-	DateTime    = "DateTime"
-	DateOnly    = "DateOnly"
-	TimeOnly    = "TimeOnly"
-	UnixMilli   = "UnixMilli"
+	Layout      LayoutName = "Layout"
+	ANSIC       LayoutName = "ANSIC"
+	UnixDate    LayoutName = "UnixDate"
+	RubyDate    LayoutName = "RubyDate"
+	RFC822      LayoutName = "RFC822"
+	RFC822Z     LayoutName = "RFC822Z"
+	RFC850      LayoutName = "RFC850"
+	RFC1123     LayoutName = "RFC1123"
+	RFC1123Z    LayoutName = "RFC1123Z"
+	RFC3339     LayoutName = "RFC3339"
+	RFC3339Nano LayoutName = "RFC3339Nano"
+	Kitchen     LayoutName = "Kitchen"
+	Stamp       LayoutName = "Stamp"
+	StampMilli  LayoutName = "StampMilli"
+	StampMicro  LayoutName = "StampMicro"
+	StampNano   LayoutName = "StampNano"
+	DateTime    LayoutName = "DateTime"
+	DateOnly    LayoutName = "DateOnly"
+	TimeOnly    LayoutName = "TimeOnly"
+	UnixMilli   LayoutName = "UnixMilli"
 )
+
+func parseLayout(layout LayoutName, v string) (time.Time, error) {
+	switch layout {
+	case Layout:
+		return time.Parse(time.Layout, v)
+	case ANSIC:
+		return time.Parse(time.ANSIC, v)
+	case UnixDate:
+		return time.Parse(time.UnixDate, v)
+	case RubyDate:
+		return time.Parse(time.RubyDate, v)
+	case RFC822:
+		return time.Parse(time.RFC822, v)
+	case RFC822Z:
+		return time.Parse(time.RFC822Z, v)
+	case RFC850:
+		return time.Parse(time.RFC850, v)
+	case RFC1123:
+		return time.Parse(time.RFC1123, v)
+	case RFC1123Z:
+		return time.Parse(time.RFC1123Z, v)
+	case RFC3339:
+		return time.Parse(time.RFC3339, v)
+	case RFC3339Nano:
+		return time.Parse(time.RFC3339Nano, v)
+	case Kitchen:
+		return time.Parse(time.Kitchen, v)
+	case Stamp:
+		return time.Parse(time.Stamp, v)
+	case StampMilli:
+		return time.Parse(time.StampMilli, v)
+	case StampMicro:
+		return time.Parse(time.StampMicro, v)
+	case StampNano:
+		return time.Parse(time.StampNano, v)
+	case DateTime:
+		return time.Parse(time.DateTime, v)
+	case DateOnly:
+		return time.Parse(time.DateOnly, v)
+	case TimeOnly:
+		return time.Parse(time.TimeOnly, v)
+	case UnixMilli:
+		vInt, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return time.Time{}, err
+		}
+		return time.UnixMilli(vInt), nil
+	default:
+		return time.Time{}, errUnknownLayout
+	}
+}

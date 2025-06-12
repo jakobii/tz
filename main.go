@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	tp := parsers.NewTimeParser(parsers.DefaultLayouts)
+	tp := parsers.NewTimeParserAll()
 	if err := cmd.NewRootCommand(tp).Execute(); err != nil {
 		os.Exit(1)
 	}

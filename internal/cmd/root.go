@@ -52,7 +52,7 @@ func NewRootCommand(parser timeParser) *cobra.Command {
 				if n, err := fmt.Fprintf(os.Stdout, "Input time: %s\n", inputTime); err != nil {
 					return fmt.Errorf("failed to print input time after writing %d bytes: %w", n, err)
 				}
-				if n, err := fmt.Fprintf(os.Stdout, "Tried as: %s\n", strings.Join(result.TriedAs, ", ")); err != nil {
+				if n, err := fmt.Fprintf(os.Stdout, "Tried as: %+v\n", result.TriedAs); err != nil {
 					return fmt.Errorf("failed to print tried as after writing %d bytes: %w", n, err)
 				}
 				if n, err := fmt.Fprintf(os.Stdout, "Parsed as: %s\n", result.ParsedAs); err != nil {
