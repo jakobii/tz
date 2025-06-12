@@ -61,7 +61,7 @@ func NewRootCommand() *cobra.Command {
 	rootCmd.Flags().StringP("input-format", "i", defaultFormat, "The format the time will be parsed as. (e.g. unix, rfc3339, all goland time package layouts, etc.)")
 	rootCmd.Flags().StringP("output-format", "o", defaultFormat, "The format time will be output as.")
 	location := time.Now().Location()
-	rootCmd.Flags().StringP("output-location", "l", location.String(), "The timezone location to use (e.g. America/New_York or offsets: -5, +12:45). See https://data.iana.org/time-zones/tzdb-2021a/zone1970.tab for a list of valid locations.")
+	rootCmd.Flags().StringP("output-location", "l", location.String(), "The timezone location to change to (e.g. America/New_York or offsets: -5, +12:45). See https://data.iana.org/time-zones/tzdb-2021a/zone1970.tab for a list of valid locations.")
 	return rootCmd
 }
 
