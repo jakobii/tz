@@ -16,12 +16,13 @@ import (
 
 func NewRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:       "tz",
-		Short:     "a timestamp offset CLI tool",
-		Long:      `A CLI tool for converting to other timezones. Its mostly a wrapper around Go's time package.`,
-		ValidArgs: []string{"time"},
-		Args:      cobra.ArbitraryArgs,
-		Example:   "tz [FLAG]... timestamp",
+		Use:          "tz",
+		Short:        "a timestamp offset CLI tool",
+		Long:         `A CLI tool for converting to other timezones. Its mostly a wrapper around Go's time package.`,
+		ValidArgs:    []string{"time"},
+		Args:         cobra.ArbitraryArgs,
+		Example:      "tz [FLAG]... timestamp",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//isVerbose := cmd.PersistentFlags().Changed("verbose")
 			inputTime, err := getTimeParam(args)
