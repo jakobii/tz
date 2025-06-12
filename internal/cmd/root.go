@@ -16,9 +16,9 @@ import (
 
 func NewRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "tz",
+		Use:   "tz [flags] <timestamp>",
 		Short: "a timestamp offset CLI tool",
-		Long:  `A CLI tool for converting to other timezones. Its mostly a wrapper around Go's time package.`,
+		Long:  `A CLI tool for converting to other timezones. Its mostly a wrapper around Go's time package. Accepts timestamp from stdin or as an argument.`,
 		Args:  cobra.ArbitraryArgs,
 		Example: "tz '2009-11-10T23:00:00Z                                # change UTC to local.\n" +
 			"tz -l America/New_York '2009-11-10T23:00:00Z            # change timezone to NY.\n" +
