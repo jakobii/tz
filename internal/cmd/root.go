@@ -24,7 +24,7 @@ func NewRootCommand() *cobra.Command {
 			"tz -l America/New_York '2009-11-10T23:00:00Z            # change timezone to NY.\n" +
 			"tz -l -5 '2009-11-10T23:00:00Z                          # change timezone to specific offset '-5' hours.\n" +
 			"tz -l +12:45 '2009-11-10T23:00:00Z                      # change timezone to specific offset.\n" +
-			"tz -i RubyDate -o ms 'Tue Nov 10 23:00:00 +0000 2009'   # RubyDate to milliseconds since epoch.\n",
+			"tz -i RubyDate -o ms 'Tue Nov 10 23:00:00 +0000 2009'   # RubyDate to milliseconds since epoch.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//isVerbose := cmd.PersistentFlags().Changed("verbose")
