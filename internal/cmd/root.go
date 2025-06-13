@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/jakobii/tz/internal/chrono"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 func NewRootCommand() *cobra.Command {
@@ -31,6 +33,7 @@ func NewRootCommand() *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//isVerbose := cmd.PersistentFlags().Changed("verbose")
+			cfg := getConfig()
 			inputTime, err := getTimeParam(args)
 			if err != nil {
 				return fmt.Errorf("failed to get input time: %w", err)
@@ -44,6 +47,9 @@ func NewRootCommand() *cobra.Command {
 				customFormat, err := cmd.Flags().GetString("input-format")
 				if err != nil {
 					return fmt.Errorf("failed to get custom format: %w", err)
+				}
+				if v, ok := cfg.getCustomFormat(customFormat); ok {
+					customFormat = v
 				}
 				t, err := time.Parse(strings.TrimSpace(customFormat), inputTime)
 				if err != nil {
@@ -71,6 +77,9 @@ func NewRootCommand() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to get custom output format: %w", err)
 				}
+				if v, ok := cfg.getCustomFormat(customFormat); ok {
+					customFormat = v
+				}
 				formattedTimeOutput = changedTime.Format(strings.TrimSpace(customFormat))
 			} else {
 				formattedTimeOutput = chrono.FormatTime(outFormat, changedTime)
@@ -93,62 +102,110 @@ func NewRootCommand() *cobra.Command {
 // Local is a special value that means the local time zone. The time package understands this value.
 const defaultLocation = "Local"
 
+var defaultConfigFilename = ".tzconfig.yaml"
+
+func getConfigFilePath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(homeDir, defaultConfigFilename)
+}
+
+type Config struct {
+	Customformats map[string]string `yaml:"customFormats,omitempty"`
+}
+
+func (c Config) getCustomFormat(name string) (string, bool) {
+	if c.Customformats == nil {
+		return "", false
+	}
+	v, ok := c.Customformats[name]
+	return v, ok
+}
+
+const maxConfigSize = 1024
+
+func loadConfig() (Config, error) {
+	configFilePath := getConfigFilePath()
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		return Config{}, nil // No config file found
+	}
+	f, err := os.Open(configFilePath)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to open config file: %w", err)
+	}
+	var c Config
+	if err := yaml.NewDecoder(io.LimitReader(f, maxConfigSize)).Decode(&c); err != nil {
+		return Config{}, fmt.Errorf("failed to parse config file: %w", err)
+	}
+	return c, nil
+}
+
+func getConfig() Config {
+	config, err := loadConfig()
+	if err != nil {
+		return Config{}
+	}
+	return config
+}
+
 const formatRules = `
 
 	summary of the formatting components:
 
-	Year: "2006" "06"
-	Month: "Jan" "January" "01" "1"
-	Day of the week: "Mon" "Monday"
-	Day of the month: "2" "_2" "02"
-	Day of the year: "__2" "002"
-	Hour: "15" "3" "03" (PM or AM)
-	Minute: "4" "04"
-	Second: "5" "05"
-	AM/PM mark: "PM"
+		Year: "2006" "06"
+		Month: "Jan" "January" "01" "1"
+		Day of the week: "Mon" "Monday"
+		Day of the month: "2" "_2" "02"
+		Day of the year: "__2" "002"
+		Hour: "15" "3" "03" (PM or AM)
+		Minute: "4" "04"
+		Second: "5" "05"
+		AM/PM mark: "PM"
 
 	Numeric time zone offsets:
 
-	"-0700"     ±hhmm
-	"-07:00"    ±hh:mm
-	"-07"       ±hh
-	"-070000"   ±hhmmss
-	"-07:00:00" ±hh:mm:ss
+		"-0700"     ±hhmm
+		"-07:00"    ±hh:mm
+		"-07"       ±hh
+		"-070000"   ±hhmmss
+		"-07:00:00" ±hh:mm:ss
 
 	ISO 8601 behavior:
 
-	"Z0700"      Z or ±hhmm
-	"Z07:00"     Z or ±hh:mm
-	"Z07"        Z or ±hh
-	"Z070000"    Z or ±hhmmss
-	"Z07:00:00"  Z or ±hh:mm:ss
+		"Z0700"      Z or ±hhmm
+		"Z07:00"     Z or ±hh:mm
+		"Z07"        Z or ±hh
+		"Z070000"    Z or ±hhmmss
+		"Z07:00:00"  Z or ±hh:mm:ss
 
 	Predefined formats:
 
-	ANSIC       = "Mon Jan _2 15:04:05 2006"
-	UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
-	RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
-	RFC822      = "02 Jan 06 15:04 MST"
-	RFC822Z     = "02 Jan 06 15:04 -0700" 
-	RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
-	RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
-	RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700" 
-	RFC3339     = "2006-01-02T15:04:05Z07:00"
-	RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
-	Kitchen     = "3:04PM"
-	Stamp      = "Jan _2 15:04:05"
-	StampMilli = "Jan _2 15:04:05.000"
-	StampMicro = "Jan _2 15:04:05.000000"
-	StampNano  = "Jan _2 15:04:05.000000000"
-	DateTime   = "2006-01-02 15:04:05"
-	DateOnly   = "2006-01-02"
-	TimeOnly   = "15:04:05"
+		ANSIC       = "Mon Jan _2 15:04:05 2006"
+		UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
+		RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
+		RFC822      = "02 Jan 06 15:04 MST"
+		RFC822Z     = "02 Jan 06 15:04 -0700" 
+		RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
+		RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
+		RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700" 
+		RFC3339     = "2006-01-02T15:04:05Z07:00"
+		RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
+		Kitchen     = "3:04PM"
+		Stamp       = "Jan _2 15:04:05"
+		StampMilli  = "Jan _2 15:04:05.000"
+		StampMicro  = "Jan _2 15:04:05.000000"
+		StampNano   = "Jan _2 15:04:05.000000000"
+		DateTime    = "2006-01-02 15:04:05"
+		DateOnly    = "2006-01-02"
+		TimeOnly    = "15:04:05"
 
 	Unix formats (These do not follow Go's time package layout rules):
 
-	Unix       Number of seconds since January 1, 1970 UTC.
-	UnixMilli  Number of milliseconds since January 1, 1970 UTC.
-	UnixMicro  Number of microseconds since January 1, 1970 UTC.
+		Unix       Number of seconds since January 1, 1970 UTC.
+		UnixMilli  Number of milliseconds since January 1, 1970 UTC.
+		UnixMicro  Number of microseconds since January 1, 1970 UTC.
 `
 
 func hasStdin() bool {
