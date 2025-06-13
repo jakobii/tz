@@ -11,7 +11,8 @@ import (
 type Format int
 
 const (
-	Layout Format = iota
+	Unknown Format = iota + 1
+	Layout
 	ANSIC
 	UnixDate
 	RubyDate
