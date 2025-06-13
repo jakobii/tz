@@ -86,9 +86,12 @@ func NewRootCommand() *cobra.Command {
 	//TODO: add support for custom formats.
 	rootCmd.Flags().StringP("input-format", "i", defaultFormat, "The format the time will be parsed as. May be one of the predefined formats or a custom format string.")
 	rootCmd.Flags().StringP("output-format", "o", defaultFormat, "The format time will be output as. May be one of the predefined formats or a custom format string.")
-	rootCmd.Flags().StringP("output-location", "l", location.String(), "The timezone location to change to (e.g. America/New_York or offsets: -5, +12:45). See https://data.iana.org/time-zones/tzdb-2021a/zone1970.tab for a list of valid locations.")
+	rootCmd.Flags().StringP("output-location", "l", defaultLocation, "The timezone location to change to (e.g. America/New_York or offsets: -5, +12:45). See https://data.iana.org/time-zones/tzdb-2021a/zone1970.tab for a list of valid locations.")
 	return rootCmd
 }
+
+// Local is a special value that means the local time zone. The time package understands this value.
+const defaultLocation = "Local"
 
 const formatRules = `
 
