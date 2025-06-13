@@ -135,6 +135,7 @@ func loadConfig() (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to open config file: %w", err)
 	}
+	defer f.Close()
 	var c Config
 	if err := yaml.NewDecoder(io.LimitReader(f, maxConfigSize)).Decode(&c); err != nil {
 		return Config{}, fmt.Errorf("failed to parse config file: %w", err)
